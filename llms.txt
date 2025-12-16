@@ -1,103 +1,52 @@
 # 1Campus GPT V4 API
 
-> 1Campus GPT V4 API 完整文件，供前端開發者和 AI 助手查詢使用。
+> 企業級 AI 對話 API，支援 SSE 串流、工具呼叫、Client Function Call。
 
-## 如何使用此文件（給 AI 助手）
+## API 概覽
 
-### 方式一：MCP 模式（推薦）
+- **Endpoint**: `POST /v4/response`
+- **回應格式**: SSE (Server-Sent Events)
+- **Content-Type**: `application/json`
 
-如果你的環境支援 **GitMCP**，可以使用以下工具：
+## 文件索引
 
-```
-MCP URL: https://gitmcp.io/ischoolinc/gpt.1campus.net-doc
-```
+### 快速開始
 
-| MCP 工具 | 功能 |
-|---------|------|
-| `fetch_gpt_1campus_net_docs` | 獲取此索引文件 |
-| `search_gpt_1campus_net_docs` | 搜尋文件內容 |
-| `fetch_generic_url_content` | 讀取具體文件 |
+- [快速入門](https://ischoolinc.github.io/gpt.1campus.net-doc/quickstart.md): 5 分鐘上手 V4 API
+- [文件總覽](https://ischoolinc.github.io/gpt.1campus.net-doc/README.md): 架構總覽和使用場景
 
-**搜尋關鍵字建議**：
+### API 規格
 
-| 想查詢的內容 | 建議關鍵字 |
-|-------------|-----------|
-| API 請求格式 | `request`, `POST`, `參數` |
-| SSE 事件 | `event`, `text.delta`, `conversation` |
-| 工具呼叫 | `tool`, `function call`, `tool.execute` |
-| 錯誤處理 | `error`, `錯誤碼`, `error-codes` |
-| 前端實作 | `client`, `TypeScript`, `Angular` |
+- [Request 參數](https://ischoolinc.github.io/gpt.1campus.net-doc/request.md): POST /v4/response 請求參數完整規格
+- [Response 格式](https://ischoolinc.github.io/gpt.1campus.net-doc/response.md): API 回應格式規格
+- [Input 格式](https://ischoolinc.github.io/gpt.1campus.net-doc/input.md): 對話輸入格式（messages、tool_outputs）
+- [ModelOptions](https://ischoolinc.github.io/gpt.1campus.net-doc/model-options.md): 模型選項完整參考
+- [錯誤碼](https://ischoolinc.github.io/gpt.1campus.net-doc/error-codes.md): 錯誤碼和處理方式
 
-### 方式二：純文件模式（通用）
+### 事件系統（SSE）
 
-如果沒有 MCP 支援，可直接用 HTTP 請求讀取文件（支援 CORS）。
-
-**入口 URL（先讀這個）**：
-```
-https://ischoolinc.github.io/gpt.1campus.net-doc/llms.txt
-```
-
-**其他文件 URL 格式**：
-```
-https://ischoolinc.github.io/gpt.1campus.net-doc/{檔案路徑}
-```
-
-**常用文件 URL**：
-| 文件 | URL |
-|------|-----|
-| 索引（入口） | `https://ischoolinc.github.io/gpt.1campus.net-doc/llms.txt` |
-| 快速入門 | `https://ischoolinc.github.io/gpt.1campus.net-doc/quickstart.md` |
-| 請求參數 | `https://ischoolinc.github.io/gpt.1campus.net-doc/request.md` |
-| 事件總覽 | `https://ischoolinc.github.io/gpt.1campus.net-doc/events.md` |
-| Tool 事件 | `https://ischoolinc.github.io/gpt.1campus.net-doc/events/tool-events.md` |
-
-**使用流程**：
-1. 先讀取 `llms.txt`（此文件）了解有哪些文件
-2. 根據需求，請使用者提供對應文件的 URL 讓你讀取
-
-> ⚠️ **安全限制說明**：由於安全考量，大多數 AI 服務無法自動讀取文件內容中的連結。如需讀取其他文件，請要求使用者將上方「常用文件 URL」表格中的完整 URL 貼給你。
-
----
-
-## 快速開始
-
-- [文件索引](./README.md): API 文件入口，包含架構總覽和使用場景
-- [快速入門](./quickstart.md): 5 分鐘上手 V4 API
-
-## API 規格
-
-- [Request 參數](./request.md): POST /v4/response 請求參數完整規格
-- [Response 格式](./response.md): API 回應格式規格
-- [Input 格式](./input.md): 對話輸入格式（messages、tool_outputs）
-- [ModelOptions](./model-options.md): 模型選項完整參考
-- [錯誤碼](./error-codes.md): 錯誤碼標準和處理方式
-
-## 事件系統（SSE）
-
-- [事件參考](./events.md): SSE 串流事件快速參考
-- [事件總覽](./events/overview.md): 事件架構和分類說明
-- [設計原理](./events/design-principles.md): 事件設計的核心原則
-
-### 事件類型詳細說明
+- [事件參考](https://ischoolinc.github.io/gpt.1campus.net-doc/events.md): SSE 串流事件快速參考
+- [事件總覽](https://ischoolinc.github.io/gpt.1campus.net-doc/events/overview.md): 事件架構和分類說明
+- [設計原理](https://ischoolinc.github.io/gpt.1campus.net-doc/events/design-principles.md): 事件設計的核心原則
 
 | 事件系列 | 文件 | 包含事件 |
 |---------|------|---------|
-| Text | [text-events.md](./events/text-events.md) | `text.started`, `text.delta`, `text.completed` |
-| Reasoning | [reasoning-events.md](./events/reasoning-events.md) | `reasoning.started`, `reasoning.delta`, `reasoning.completed` |
-| Tool | [tool-events.md](./events/tool-events.md) | `tool.start`, `tool.execute`, `tool.complete` |
-| Search | [search-events.md](./events/search-events.md) | `web_search.*`, `file_search.*` |
-| Iteration | [iteration-events.md](./events/iteration-events.md) | `iteration.started`, `iteration.completed` |
-| Conversation | [conversation-events.md](./events/conversation-events.md) | `conversation.started`, `conversation.paused`, `conversation.resumed`, `conversation.completed` |
+| Text | [text-events.md](https://ischoolinc.github.io/gpt.1campus.net-doc/events/text-events.md) | `text.started`, `text.delta`, `text.completed` |
+| Reasoning | [reasoning-events.md](https://ischoolinc.github.io/gpt.1campus.net-doc/events/reasoning-events.md) | `reasoning.started`, `reasoning.delta`, `reasoning.completed` |
+| Tool | [tool-events.md](https://ischoolinc.github.io/gpt.1campus.net-doc/events/tool-events.md) | `tool.start`, `tool.execute`, `tool.complete` |
+| Search | [search-events.md](https://ischoolinc.github.io/gpt.1campus.net-doc/events/search-events.md) | `web_search.*`, `file_search.*` |
+| Iteration | [iteration-events.md](https://ischoolinc.github.io/gpt.1campus.net-doc/events/iteration-events.md) | `iteration.started`, `iteration.completed` |
+| Conversation | [conversation-events.md](https://ischoolinc.github.io/gpt.1campus.net-doc/events/conversation-events.md) | `conversation.started`, `conversation.paused`, `conversation.resumed`, `conversation.completed` |
 
-## 進階功能
+### 進階功能
 
-- [Client Function Call](./client-function-call.md): AI 控制前端 UI 的完整指南，包含兩輪 HTTP 流程
-- [Context 模板](./context-template.md): 動態內容模板語法
-- [Title Generation](./title-generation.md): 對話標題生成 API
+- [Client Function Call](https://ischoolinc.github.io/gpt.1campus.net-doc/client-function-call.md): AI 控制前端 UI，包含兩輪 HTTP 流程
+- [Context 模板](https://ischoolinc.github.io/gpt.1campus.net-doc/context-template.md): 動態內容模板語法
+- [Title Generation](https://ischoolinc.github.io/gpt.1campus.net-doc/title-generation.md): 對話標題生成 API
 
 ---
 
-## 完整事件列表（快速參考）
+## 事件快速參考
 
 ```
 conversation.started    - 對話開始
@@ -126,3 +75,11 @@ web_search.completed    - 網頁搜尋完成
 file_search.started     - 檔案搜尋開始
 file_search.completed   - 檔案搜尋完成
 ```
+
+---
+
+## 給 AI 助手
+
+需要更多資訊？直接讀取上方連結的文件。
+
+支援 MCP 的環境可使用：`https://gitmcp.io/ischoolinc/gpt.1campus.net-doc`
