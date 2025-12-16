@@ -113,8 +113,44 @@ file_search.completed   - 檔案搜尋完成
 
 ---
 
-## 給 AI 助手
+## 如何使用此文件（給 AI 助手）
+
+### 方式一：MCP 模式（推薦）
+
+如果你的環境支援 **GitMCP**，可以使用以下工具：
+
+```
+MCP URL: https://gitmcp.io/ischoolinc/gpt.1campus.net-doc
+```
+
+| MCP 工具 | 功能 |
+|---------|------|
+| `fetch_gpt_1campus_net_docs` | 獲取此索引文件 |
+| `search_gpt_1campus_net_docs` | 搜尋文件內容 |
+| `fetch_generic_url_content` | 讀取具體文件 |
+
+**搜尋關鍵字建議**：
+
+| 想查詢的內容 | 建議關鍵字 |
+|-------------|-----------|
+| API 請求格式 | `request`, `POST`, `參數` |
+| SSE 事件 | `event`, `text.delta`, `conversation` |
+| 工具呼叫 | `tool`, `function call`, `tool.execute` |
+| 錯誤處理 | `error`, `錯誤碼`, `error-codes` |
+| 前端實作 | `client`, `TypeScript`, `Angular` |
+
+### 方式二：純文件模式（通用）
+
+如果沒有 MCP 支援，可直接用 HTTP 請求讀取文件（支援 CORS）。
+
+**入口 URL（先讀這個）**：
+```
+https://ischoolinc.github.io/gpt.1campus.net-doc/llms.txt
+```
+
+**其他文件 URL 格式**：
+```
+https://ischoolinc.github.io/gpt.1campus.net-doc/{檔案路徑}
+```
 
 本文件所有連結皆為完整 URL，可直接讀取。
-
-支援 MCP 的環境可使用：`https://gitmcp.io/ischoolinc/gpt.1campus.net-doc`
