@@ -30,20 +30,29 @@ MCP URL: https://gitmcp.io/ischoolinc/gpt.1campus.net-doc
 
 ### 方式二：純文件模式（通用）
 
-如果沒有 MCP 支援，可直接用 HTTP 請求讀取 raw 文件：
+如果沒有 MCP 支援，可直接用 HTTP 請求讀取文件（支援 CORS）。
 
+**入口 URL（先讀這個）**：
 ```
-https://raw.githubusercontent.com/ischoolinc/gpt.1campus.net-doc/main/{檔案路徑}
+https://ischoolinc.github.io/gpt.1campus.net-doc/llms.txt
 ```
 
-**範例 URL**：
-- 此索引：`.../main/llms.txt`
-- 事件總覽：`.../main/events.md`
-- Tool 事件：`.../main/events/tool-events.md`
-- 請求參數：`.../main/request.md`
+**其他文件 URL 格式**：
+```
+https://ischoolinc.github.io/gpt.1campus.net-doc/{檔案路徑}
+```
+
+**常用文件 URL**：
+| 文件 | URL |
+|------|-----|
+| 索引（入口） | `https://ischoolinc.github.io/gpt.1campus.net-doc/llms.txt` |
+| 快速入門 | `https://ischoolinc.github.io/gpt.1campus.net-doc/quickstart.md` |
+| 請求參數 | `https://ischoolinc.github.io/gpt.1campus.net-doc/request.md` |
+| 事件總覽 | `https://ischoolinc.github.io/gpt.1campus.net-doc/events.md` |
+| Tool 事件 | `https://ischoolinc.github.io/gpt.1campus.net-doc/events/tool-events.md` |
 
 **使用流程**：
-1. 先讀取 `llms.txt` 了解有哪些文件
+1. 先讀取 `llms.txt`（此文件）了解有哪些文件
 2. 根據需求讀取對應的 `.md` 文件
 
 ---
