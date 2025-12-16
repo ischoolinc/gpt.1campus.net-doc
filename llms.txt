@@ -2,6 +2,52 @@
 
 > 1Campus GPT V4 API 完整文件，供前端開發者和 AI 助手查詢使用。
 
+## 如何使用此文件（給 AI 助手）
+
+### 方式一：MCP 模式（推薦）
+
+如果你的環境支援 **GitMCP**，可以使用以下工具：
+
+```
+MCP URL: https://gitmcp.io/ischoolinc/gpt.1campus.net-doc
+```
+
+| MCP 工具 | 功能 |
+|---------|------|
+| `fetch_gpt_1campus_net_docs` | 獲取此索引文件 |
+| `search_gpt_1campus_net_docs` | 搜尋文件內容 |
+| `fetch_generic_url_content` | 讀取具體文件 |
+
+**搜尋關鍵字建議**：
+
+| 想查詢的內容 | 建議關鍵字 |
+|-------------|-----------|
+| API 請求格式 | `request`, `POST`, `參數` |
+| SSE 事件 | `event`, `text.delta`, `conversation` |
+| 工具呼叫 | `tool`, `function call`, `tool.execute` |
+| 錯誤處理 | `error`, `錯誤碼`, `error-codes` |
+| 前端實作 | `client`, `TypeScript`, `Angular` |
+
+### 方式二：純文件模式（通用）
+
+如果沒有 MCP 支援，可直接用 HTTP 請求讀取 raw 文件：
+
+```
+https://raw.githubusercontent.com/ischoolinc/gpt.1campus.net-doc/main/{檔案路徑}
+```
+
+**範例 URL**：
+- 此索引：`.../main/llms.txt`
+- 事件總覽：`.../main/events.md`
+- Tool 事件：`.../main/events/tool-events.md`
+- 請求參數：`.../main/request.md`
+
+**使用流程**：
+1. 先讀取 `llms.txt` 了解有哪些文件
+2. 根據需求讀取對應的 `.md` 文件
+
+---
+
 ## 快速開始
 
 - [文件索引](./README.md): API 文件入口，包含架構總覽和使用場景
@@ -23,15 +69,49 @@
 
 ### 事件類型詳細說明
 
-- [Text 事件](./events/text-events.md): 文字串流事件（text.delta, text.complete）
-- [Reasoning 事件](./events/reasoning-events.md): 推理過程事件
-- [Tool 事件](./events/tool-events.md): 工具呼叫事件（tool.start, tool.execute, tool.complete）
-- [Search 事件](./events/search-events.md): 搜尋相關事件
-- [Iteration 事件](./events/iteration-events.md): 迭代控制事件
-- [Conversation 事件](./events/conversation-events.md): 對話狀態事件（paused, resumed, complete）
+| 事件系列 | 文件 | 包含事件 |
+|---------|------|---------|
+| Text | [text-events.md](./events/text-events.md) | `text.started`, `text.delta`, `text.completed` |
+| Reasoning | [reasoning-events.md](./events/reasoning-events.md) | `reasoning.started`, `reasoning.delta`, `reasoning.completed` |
+| Tool | [tool-events.md](./events/tool-events.md) | `tool.start`, `tool.execute`, `tool.complete` |
+| Search | [search-events.md](./events/search-events.md) | `web_search.*`, `file_search.*` |
+| Iteration | [iteration-events.md](./events/iteration-events.md) | `iteration.started`, `iteration.completed` |
+| Conversation | [conversation-events.md](./events/conversation-events.md) | `conversation.started`, `conversation.paused`, `conversation.resumed`, `conversation.completed` |
 
 ## 進階功能
 
 - [Client Function Call](./client-function-call.md): AI 控制前端 UI 的完整指南，包含兩輪 HTTP 流程
 - [Context 模板](./context-template.md): 動態內容模板語法
 - [Title Generation](./title-generation.md): 對話標題生成 API
+
+---
+
+## 完整事件列表（快速參考）
+
+```
+conversation.started    - 對話開始
+conversation.paused     - 對話暫停（等待 client function 執行）
+conversation.resumed    - 對話恢復
+conversation.completed  - 對話完成
+conversation.error      - 對話錯誤
+
+iteration.started       - 迭代開始
+iteration.completed     - 迭代完成
+
+text.started            - 文字輸出開始
+text.delta              - 文字片段（串流）
+text.completed          - 文字輸出完成
+
+tool.start              - 工具呼叫開始
+tool.execute            - 請求前端執行（Client Function Call）
+tool.complete           - 工具呼叫完成
+
+reasoning.started       - 推理開始
+reasoning.delta         - 推理片段
+reasoning.completed     - 推理完成
+
+web_search.started      - 網頁搜尋開始
+web_search.completed    - 網頁搜尋完成
+file_search.started     - 檔案搜尋開始
+file_search.completed   - 檔案搜尋完成
+```
