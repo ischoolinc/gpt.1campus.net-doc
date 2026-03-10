@@ -79,15 +79,15 @@ curl --request POST \
 **注意**：
 - ⚠️ 變數必須使用 `ctx.` 前綴
 - 只處理 `instructions` 和 system role 的 messages
-- 詳細說明請參考 [Request 參數規格 - context](./request.md#context)
+- 詳細說明請參考 [Request 參數規格 - context](./references/request.md#context)
 
 ---
 
 ### 第三步：閱讀文件
 
-1. **[Request 參數規格](./request.md)** - 了解所有可用的請求參數
-2. **[Response 格式規格](./response.md)** - 了解 API 回應格式
-3. **[Events 事件規格](./events.md)** - 了解 SSE 串流事件
+1. **[Request 參數規格](./references/request.md)** - 了解所有可用的請求參數
+2. **[Response 格式規格](./references/response.md)** - 了解 API 回應格式
+3. **[Events 事件規格](./references/events.md)** - 了解 SSE 串流事件
 
 ---
 
@@ -95,7 +95,7 @@ curl --request POST \
 
 ### 核心規格
 
-#### [Request 參數規格](./request.md)
+#### [Request 參數規格](./references/request.md)
 - **內容**：V4 API 請求參數的完整定義
 - **包含**：
   - 基本參數（`name`, `thread_id`, `user`, `context`, `credential`）
@@ -103,7 +103,7 @@ curl --request POST \
   - 參數約束規則
 - **適合**：需要了解如何構建 API 請求的開發者
 
-#### [ModelOptions 完整參考](./model-options.md) ⭐ 重要
+#### [ModelOptions 完整參考](./references/model-options.md) ⭐ 重要
 - **內容**：所有 ModelOptions 屬性的詳細說明
 - **包含**：
   - 通用屬性（`model`, `temperature`, `top_p`, `max_tokens`, `instructions`）
@@ -112,7 +112,7 @@ curl --request POST \
   - 成本優化建議（Prompt Cache）
 - **適合**：需要了解完整配置選項的開發者
 
-#### [Response 格式規格](./response.md)
+#### [Response 格式規格](./references/response.md)
 - **內容**：V4 API 回應格式的完整定義
 - **包含**：
   - 非串流模式回應格式（`stream: false`）
@@ -122,7 +122,7 @@ curl --request POST \
   - TypeScript 型別定義
 - **適合**：需要處理 API 回應的前端開發者
 
-#### [Events 事件規格](./events.md)
+#### [Events 事件規格](./references/events.md)
 - **內容**：SSE 串流事件的完整定義
 - **包含**：
   - **Unified Event Protocol (UEP)** 三層事件架構（Provider 原始事件 → StandardEvent → ClientEvent）
@@ -136,7 +136,7 @@ curl --request POST \
 
 ### 詳細說明
 
-#### [Context 模板語法指南](./context-template.md)
+#### [Context 模板語法指南](./references/context-template.md)
 - **內容**：Context 參數的模板語法使用指南
 - **包含**：
   - 基本模板語法（`<%=ctx.變數%>`）
@@ -146,7 +146,7 @@ curl --request POST \
   - 完整使用範例
 - **適合**：需要動態客製化提示詞的開發者
 
-#### [Input 格式詳解](./input.md)
+#### [Input 格式詳解](./references/input.md)
 - **內容**：`input` 參數的深入說明
 - **包含**：
   - 三種 Input 格式（純文字、Messages 陣列、多模態）
@@ -155,7 +155,7 @@ curl --request POST \
   - 多輪對話處理流程
 - **適合**：需要深入了解 input 參數處理的開發者
 
-#### [錯誤碼參考](./error-codes.md)
+#### [錯誤碼參考](./references/error-codes.md)
 - **內容**：完整的錯誤碼列表
 - **包含**：
   - HTTP 狀態碼
@@ -164,7 +164,7 @@ curl --request POST \
   - 錯誤處理建議
 - **適合**：需要實作錯誤處理的開發者
 
-#### [Client-side Function Call 指南](./client-function-call.md) ⭐ 新增
+#### [Client-side Function Call 指南](./references/client-function-call.md) ⭐ 新增
 - **內容**：讓 AI 控制前端 UI 的完整指南
 - **包含**：
   - 兩輪 HTTP 請求流程
