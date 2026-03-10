@@ -37,6 +37,7 @@ eventSource.addEventListener('conversation.started', handler);
 eventSource.addEventListener('text.started', handler);
 eventSource.addEventListener('text.completed', handler);
 eventSource.addEventListener('tool.call', handler);
+eventSource.addEventListener('tool.progress', handler);  // 執行進度
 eventSource.addEventListener('tool.result', handler);
 ```
 
@@ -60,4 +61,4 @@ eventSource.addEventListener('reasoning.chunk', handler);
 
 ---
 
-**最後更新**: 2025-12-13
+**最後更新**: 2026-03-10

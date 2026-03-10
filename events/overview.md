@@ -27,7 +27,7 @@
 | **生命週期** | 對話開始/結束 | `conversation.started`, `conversation.completed`, `conversation.error` |
 | **狀態控制** | 暫停/恢復 | `conversation.paused`, `conversation.resumed` |
 | **內容串流** | 逐步輸出 | `text.chunk`, `reasoning.chunk` |
-| **工具通知** | 通知前端（僅顯示） | `tool.preparing`, `tool.call`, `tool.result` |
+| **工具通知** | 通知前端（僅顯示） | `tool.preparing`, `tool.call`, `tool.progress`, `tool.result` |
 | **工具請求** | 請求前端執行 | `tool.execute` |
 
 ### 依處理優先級
@@ -63,6 +63,7 @@ eventSource.addEventListener('conversation.started', handler);
 eventSource.addEventListener('text.started', handler);
 eventSource.addEventListener('text.completed', handler);
 eventSource.addEventListener('tool.call', handler);      // 顯示工具呼叫
+eventSource.addEventListener('tool.progress', handler);  // 顯示執行進度
 eventSource.addEventListener('tool.result', handler);    // 顯示執行結果
 ```
 
@@ -98,7 +99,7 @@ conversation.started
 ```
 conversation.started
   → iteration.started (0)
-  → tool.preparing → tool.call → tool.result
+  → tool.preparing → tool.call → tool.progress (x N, 可選) → tool.result
   → iteration.completed
   → iteration.started (1)
   → text.chunk (x N)
@@ -134,4 +135,4 @@ conversation.resumed
 
 ---
 
-**最後更新**: 2025-12-13
+**最後更新**: 2026-03-10

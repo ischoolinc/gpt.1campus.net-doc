@@ -21,6 +21,7 @@ Tool 事件分為兩類：
 |------|------|------|
 | `tool.preparing` | 通知 | 工具準備中（開始組裝參數） |
 | `tool.call` | 通知 | 工具調用（參數組裝完成） |
+| `tool.progress` | 通知 | 工具執行進度（可多次） |
 | `tool.result` | 通知 | 工具執行結果 |
 | `tool.error` | 通知 | 工具執行失敗 |
 | `tool.execute` | **請求** | 請求前端執行（Client-side） |
@@ -36,7 +37,7 @@ Tool 事件分為兩類：
 ### 事件流程
 
 ```
-tool.preparing → tool.call → tool.result
+tool.preparing → tool.call → tool.progress × N（可選）→ tool.result
 ```
 
 ### tool.preparing
@@ -80,6 +81,31 @@ tool.preparing → tool.call → tool.result
   "timestamp": "2025-12-13T10:00:01Z"
 }
 ```
+
+### tool.progress
+
+工具執行進度，在耗時較長的 builtin handler 執行過程中回報中間狀態。可發送多次。
+
+```typescript
+{
+  type: 'tool.progress',
+  call_id: string,
+  message: string,            // 進度訊息（使用者可見）
+  timestamp: string
+}
+```
+
+**範例**：
+```json
+{
+  "type": "tool.progress",
+  "call_id": "call_123",
+  "message": "正在查詢校務資料...",
+  "timestamp": "2025-12-13T10:00:01.500Z"
+}
+```
+
+**用途**：避免耗時 tool call 期間的「黑箱等待」，讓前端顯示即時進度。非所有 tool call 都會觸發此事件，僅 builtin handler 主動回報時才會出現。
 
 ### tool.result
 
@@ -143,6 +169,11 @@ eventSource.addEventListener('tool.call', (e) => {
   const { call_id, name, arguments: args } = JSON.parse(e.data);
   toolCalls.set(call_id, { status: 'executing', name, args });
   updateToolUI(call_id, `執行 ${name}...`);
+});
+
+eventSource.addEventListener('tool.progress', (e) => {
+  const { call_id, message } = JSON.parse(e.data);
+  updateToolUI(call_id, message);  // 即時更新進度訊息
 });
 
 eventSource.addEventListener('tool.result', (e) => {
@@ -343,4 +374,4 @@ async function executeClientTool(name: string, args: any): Promise<any> {
 
 ---
 
-**最後更新**: 2025-12-13
+**最後更新**: 2026-03-10
