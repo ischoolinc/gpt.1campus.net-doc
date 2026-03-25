@@ -1,5 +1,5 @@
 ---
-name: gpt-client-api
+name: gpt-doc
 description: V4 Client API 使用指南。1Campus GPT V4 API 的第三方開發者文件，涵蓋 Request/Response 規格、SSE 串流事件、Client Function Call、Context 模板、錯誤處理。當討論 V4 API 呼叫方式、串流實作、事件處理、前端整合、API 請求格式、error codes、tool_outputs、二階段 API、EventSource 時使用此 Skill。與 gpt-v4-arch（內部架構）互補，本 Skill 專注於外部 Client 端使用方式。
 ---
 
