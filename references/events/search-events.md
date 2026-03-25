@@ -26,45 +26,69 @@ Web 搜尋和檔案搜尋的事件序列。
 
 ### web_search.started
 
+搜尋開始時發送，可能包含搜尋關鍵字。
+
 ```typescript
 {
   type: 'web_search.started',
-  item_id?: string,
-  timestamp?: string
+  item_id: string,       // 搜尋項目 ID
+  query?: string,        // 搜尋查詢文字（v4.2 新增）
 }
 ```
 
+| 欄位 | 型別 | 必填 | 說明 |
+|------|------|------|------|
+| `item_id` | `string` | ✅ | 搜尋項目 ID，用於關聯 started/completed |
+| `query` | `string` | ❌ | 搜尋查詢文字，依 Provider 支援程度而定 |
+
 ### web_search.completed
+
+搜尋完成時發送，包含來源連結資訊。
 
 ```typescript
 {
   type: 'web_search.completed',
-  item_id?: string,
-  results?: Array<{
-    title: string,
-    url: string,
-    snippet?: string
-  }>,
-  timestamp?: string
+  item_id: string,                              // 搜尋項目 ID
+  query?: string,                               // 搜尋查詢文字（v4.2 新增）
+  sources?: Array<{ title: string, url: string }>,  // 來源連結（v4.2 新增）
 }
 ```
 
+| 欄位 | 型別 | 必填 | 說明 |
+|------|------|------|------|
+| `item_id` | `string` | ✅ | 搜尋項目 ID |
+| `query` | `string` | ❌ | 搜尋查詢文字 |
+| `sources` | `Array<{ title, url }>` | ❌ | 搜尋來源連結（最多 8 筆），供前端顯示參考資料 |
+
+> **v4.2 變更**: 移除 `results` 欄位（原始搜尋結果不再透傳至前端），改用語義更明確的 `sources` 欄位。
+
 ### 範例
+
+**搜尋開始**：
+
+```json
+{
+  "type": "web_search.started",
+  "item_id": "srvtoolu_019Tw88ntTzYj1d2mkyo9vD2",
+  "query": "台北市今天天氣"
+}
+```
+
+**搜尋完成**：
 
 ```json
 {
   "type": "web_search.completed",
-  "item_id": "item_123",
-  "results": [
+  "item_id": "srvtoolu_019Tw88ntTzYj1d2mkyo9vD2",
+  "query": "台北市今天天氣",
+  "sources": [
     {
-      "title": "台北市天氣預報",
-      "url": "https://weather.example.com/taipei",
-      "snippet": "今日台北市天氣晴朗，氣溫 25-30°C..."
+      "title": "台北市天氣預報 - 中央氣象署",
+      "url": "https://www.cwa.gov.tw/V8/C/W/Town/Town.html?TID=6300100"
     },
     {
-      "title": "中央氣象署",
-      "url": "https://www.cwa.gov.tw/",
-      "snippet": "提供全台天氣預報資訊..."
+      "title": "台北天氣 | Weather.com",
+      "url": "https://weather.com/zh-TW/weather/today/l/Taipei"
     }
   ]
 }
@@ -162,36 +186,36 @@ conversation.started
 
 ## 前端處理
 
-### 顯示搜尋進度
+### 顯示搜尋進度與來源
 
 ```typescript
-eventSource.addEventListener('web_search.started', () => {
-  showSearchIndicator('🔍 正在搜尋網路...');
+eventSource.addEventListener('web_search.started', (e) => {
+  const { query } = JSON.parse(e.data);
+  showSearchIndicator(query ? `🔍 正在搜尋：${query}` : '🔍 正在搜尋網路...');
 });
 
 eventSource.addEventListener('web_search.completed', (e) => {
-  const { results } = JSON.parse(e.data);
+  const { sources } = JSON.parse(e.data);
   hideSearchIndicator();
 
-  if (results && results.length > 0) {
-    showSearchResults(results);  // 顯示來源連結
+  if (sources && sources.length > 0) {
+    showSearchSources(sources);
   }
 });
 ```
 
-### 顯示搜尋來源
+### 顯示來源連結
 
 ```typescript
-function showSearchResults(results: SearchResult[]) {
+function showSearchSources(sources: Array<{ title: string, url: string }>) {
   const sourcesEl = document.createElement('div');
   sourcesEl.className = 'search-sources';
   sourcesEl.innerHTML = `
     <div class="sources-header">📚 參考來源</div>
     <ul>
-      ${results.map(r => `
+      ${sources.map(s => `
         <li>
-          <a href="${r.url}" target="_blank">${r.title}</a>
-          ${r.snippet ? `<p>${r.snippet}</p>` : ''}
+          <a href="${s.url}" target="_blank">${s.title}</a>
         </li>
       `).join('')}
     </ul>
@@ -256,19 +280,19 @@ function showSearchResults(results: SearchResult[]) {
 來源列表可能很長，建議可折疊：
 
 ```typescript
-function createCollapsibleSources(results: SearchResult[]) {
+function createCollapsibleSources(sources: Array<{ title: string, url: string }>) {
   const MAX_VISIBLE = 3;
-  const hasMore = results.length > MAX_VISIBLE;
+  const hasMore = sources.length > MAX_VISIBLE;
 
   return `
     <div class="sources">
-      ${results.slice(0, MAX_VISIBLE).map(renderSource).join('')}
+      ${sources.slice(0, MAX_VISIBLE).map(renderSource).join('')}
       ${hasMore ? `
         <button class="show-more">
-          顯示更多 (${results.length - MAX_VISIBLE})
+          顯示更多 (${sources.length - MAX_VISIBLE})
         </button>
         <div class="hidden-sources" style="display: none;">
-          ${results.slice(MAX_VISIBLE).map(renderSource).join('')}
+          ${sources.slice(MAX_VISIBLE).map(renderSource).join('')}
         </div>
       ` : ''}
     </div>
@@ -285,4 +309,4 @@ function createCollapsibleSources(results: SearchResult[]) {
 
 ---
 
-**最後更新**: 2025-12-13
+**最後更新**: 2026-03-25 (v4.2 — 新增 `query`/`sources` 欄位，移除 `results`)
