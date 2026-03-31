@@ -1,7 +1,7 @@
 # V4 API Input 格式規格
 
-**版本**：v4.0
-**最後更新**：2025-11-03
+**版本**：v4.1
+**最後更新**：2026-03-31
 **設計基準**：OpenAI Response API
 
 ---
@@ -84,12 +84,12 @@ V4 API 的 `input` 參數採用 **OpenAI Response API** 標準格式，確保：
 
 ### 格式 3：多模態內容
 
-**用途**：包含圖片、音訊等多媒體內容
+**用途**：包含圖片、PDF、音訊等多媒體內容
 
 **範例**：
 ```json
 {
-  "name": "gpt-4o-mini",
+  "name": "gpt-4o",
   "input": [
     {
       "role": "user",
@@ -117,6 +117,7 @@ V4 API 的 `input` 參數採用 **OpenAI Response API** 標準格式，確保：
 type ContentPart =
   | TextContentPart
   | ImageContentPart
+  | FileContentPart
   | AudioContentPart;
 ```
 
@@ -129,13 +130,13 @@ type ContentPart =
 }
 ```
 
-#### 圖片內容
+#### 圖片內容（URL 方式）
 
 ```typescript
 {
   type: "image_url";
   image_url: {
-    url: string;                          // 圖片 URL
+    url: string;                          // 圖片 URL 或 Base64 Data URL
     detail?: "auto" | "low" | "high";     // 解析度（可選）
   };
 }
@@ -146,7 +147,50 @@ type ContentPart =
 - `high` - 高解析度，可看到更多細節
 - `auto` - 自動選擇（預設）
 
+**url 支援格式**：
+- HTTPS URL：`https://example.com/image.jpg`
+- Base64 Data URL：`data:image/png;base64,iVBOR...`
+
+#### 檔案內容（圖片 + PDF）
+
+> v4.1 新增
+
+通用檔案上傳，支援圖片和 PDF。以 Base64 方式傳入，所有 Provider 皆支援。
+
+```typescript
+{
+  type: "file";
+  file: {
+    filename: string;     // 檔案名稱（含副檔名）
+    mime_type: string;    // MIME type
+    data: string;         // 純 Base64 編碼資料（不含 data: prefix）
+  };
+}
+```
+
+**支援的 MIME types**：
+
+| MIME type | 說明 |
+|-----------|------|
+| `image/png` | PNG 圖片 |
+| `image/jpeg` | JPEG 圖片 |
+| `image/webp` | WebP 圖片 |
+| `image/gif` | GIF 圖片 |
+| `application/pdf` | PDF 文件 |
+
+**與 `image_url` 的差異**：
+
+| | `image_url` | `file` |
+|--|-------------|--------|
+| 支援格式 | 圖片 | 圖片 + PDF |
+| 傳入方式 | URL 或 Data URL | 純 Base64 |
+| 適用場景 | 圖片已有公開 URL | 前端選檔上傳 |
+
+兩種方式皆可使用，`file` 是推薦的新方式，支援更多格式。
+
 #### 音訊內容
+
+> 目前尚未實作，規格保留供未來使用
 
 ```typescript
 {
@@ -160,7 +204,7 @@ type ContentPart =
 
 **適用場景**：
 - 圖片分析（OCR、物件辨識等）
-- 語音輸入
+- PDF 文件理解（報表、成績單等）
 - 多媒體內容理解
 
 ---
@@ -244,14 +288,14 @@ console.log(result2.outputs[0].text);  // "你叫小明"
 
 ---
 
-### 範例 4：圖片分析
+### 範例 4：圖片分析（image_url）
 
 ```typescript
 const response = await fetch('/v4/response', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
-    name: 'gpt-4o',  // 確保使用支援圖片的模型
+    name: 'gpt-4o',
     input: [
       {
         role: 'user',
@@ -264,7 +308,7 @@ const response = await fetch('/v4/response', {
             type: 'image_url',
             image_url: {
               url: 'https://example.com/photo.jpg',
-              detail: 'high'  // 使用高解析度以獲得更多細節
+              detail: 'high'
             }
           }
         ]
@@ -276,7 +320,87 @@ const response = await fetch('/v4/response', {
 
 ---
 
-### 範例 5：圖片 + 對話歷史
+### 範例 5：上傳圖片（file）
+
+前端選檔後，將圖片轉為 Base64 傳入：
+
+```typescript
+// 將 File 物件轉為 Base64
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      resolve(dataUrl.split(',')[1]);  // 去掉 data:...;base64, prefix
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+const file = inputElement.files[0];  // 使用者選的檔案
+const base64 = await fileToBase64(file);
+
+const response = await fetch('/v4/response', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    name: 'gpt-4o',
+    input: [
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: '請描述這張圖片' },
+          {
+            type: 'file',
+            file: {
+              filename: file.name,
+              mime_type: file.type,
+              data: base64
+            }
+          }
+        ]
+      }
+    ]
+  })
+});
+```
+
+---
+
+### 範例 6：上傳 PDF
+
+```typescript
+const pdfFile = inputElement.files[0];
+const base64 = await fileToBase64(pdfFile);
+
+const response = await fetch('/v4/response', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    name: 'gpt-4o',
+    input: [
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: '請摘要這份報告的重點' },
+          {
+            type: 'file',
+            file: {
+              filename: 'report.pdf',
+              mime_type: 'application/pdf',
+              data: base64
+            }
+          }
+        ]
+      }
+    ]
+  })
+});
+```
+
+---
+
+### 範例 7：圖片 + 對話歷史
 
 ```typescript
 const response = await fetch('/v4/response', {
@@ -334,6 +458,7 @@ export interface Message {
 export type ContentPart =
   | TextContentPart
   | ImageContentPart
+  | FileContentPart
   | AudioContentPart;
 
 export interface TextContentPart {
@@ -346,6 +471,20 @@ export interface ImageContentPart {
   image_url: {
     url: string;
     detail?: 'auto' | 'low' | 'high';
+  };
+}
+
+/**
+ * 檔案內容（v4.1 新增）
+ *
+ * 支援圖片（png/jpeg/webp/gif）和 PDF
+ */
+export interface FileContentPart {
+  type: 'file';
+  file: {
+    filename: string;     // 檔案名稱（含副檔名）
+    mime_type: string;    // MIME type
+    data: string;         // 純 Base64（不含 data: prefix）
   };
 }
 
@@ -369,7 +508,8 @@ export interface AudioContentPart {
 | 簡單查詢 | 純文字字串 |
 | 需要 system prompt | Messages 陣列 |
 | 多輪對話 | 使用 `thread_id`，input 用純文字 |
-| 圖片/音訊分析 | Messages 陣列 + 多模態 content |
+| 圖片分析 | Messages 陣列 + `image_url` 或 `file` |
+| PDF 文件理解 | Messages 陣列 + `file`（mime_type: `application/pdf`） |
 
 ---
 
@@ -401,14 +541,16 @@ const res = await callAPI({ input: history });  // 繁瑣且容易出錯
 
 ---
 
-### 3. 圖片處理建議
+### 3. 圖片與檔案處理建議
 
-- **使用 HTTPS URL**：確保圖片可被存取
-- **選擇適當的 detail**：
+- **推薦使用 `file` 類型**：支援圖片和 PDF，格式統一
+- **`image_url` 仍可使用**：適合圖片已有公開 URL 的情境
+- **選擇適當的 detail**（僅 `image_url`）：
   - 需要看清文字 → `high`
   - 只需大致辨識 → `low`（省錢省時間）
   - 不確定 → `auto`（預設）
 - **檢查模型支援**：確保使用支援多模態的模型（如 `gpt-4o`）
+- **注意檔案大小**：Base64 編碼會使檔案大小增加約 33%，建議控制在合理範圍內
 
 ---
 
@@ -521,5 +663,5 @@ const res = await callAPI({ input: history });  // 繁瑣且容易出錯
 
 ---
 
-**最後更新**：2025-11-03
+**最後更新**：2026-03-31
 **維護者**：前端開發者如有問題，請參考範例或聯繫後端團隊
