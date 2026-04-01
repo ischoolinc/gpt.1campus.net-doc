@@ -101,8 +101,7 @@ V4 API 的 `input` 參數採用 **OpenAI Response API** 標準格式，確保：
         {
           "type": "image_url",
           "image_url": {
-            "url": "https://example.com/image.jpg",
-            "detail": "high"
+            "url": "https://example.com/image.jpg"
           }
         }
       ]
@@ -136,16 +135,10 @@ type ContentPart =
 {
   type: "image_url";
   image_url: {
-    url: string;                          // 圖片 URL 或 Base64 Data URL
-    detail?: "auto" | "low" | "high";     // 解析度（可選）
+    url: string;    // 圖片 URL 或 Base64 Data URL
   };
 }
 ```
-
-**detail 說明**：
-- `low` - 低解析度，處理速度快，成本低
-- `high` - 高解析度，可看到更多細節
-- `auto` - 自動選擇（預設）
 
 **url 支援格式**：
 - HTTPS URL：`https://example.com/image.jpg`
@@ -307,8 +300,7 @@ const response = await fetch('/v4/response', {
           {
             type: 'image_url',
             image_url: {
-              url: 'https://example.com/photo.jpg',
-              detail: 'high'
+              url: 'https://example.com/photo.jpg'
             }
           }
         ]
@@ -470,7 +462,6 @@ export interface ImageContentPart {
   type: 'image_url';
   image_url: {
     url: string;
-    detail?: 'auto' | 'low' | 'high';
   };
 }
 
@@ -545,10 +536,6 @@ const res = await callAPI({ input: history });  // 繁瑣且容易出錯
 
 - **推薦使用 `file` 類型**：支援圖片和 PDF，格式統一
 - **`image_url` 仍可使用**：適合圖片已有公開 URL 的情境
-- **選擇適當的 detail**（僅 `image_url`）：
-  - 需要看清文字 → `high`
-  - 只需大致辨識 → `low`（省錢省時間）
-  - 不確定 → `auto`（預設）
 - **檢查模型支援**：確保使用支援多模態的模型（如 `gpt-4o`）
 - **注意檔案大小**：Base64 編碼會使檔案大小增加約 33%，建議控制在合理範圍內
 
