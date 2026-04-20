@@ -50,6 +50,18 @@
 - **必填**: 否
 - **說明**: 認證資訊，用於 Function Call 權限驗證
 
+#### 系統自動注入欄位
+
+V4 會在 credential 上自動合併以下系統保留欄位（以 `__` 前綴標記），Function Call 的 `credentialRouting` 可直接取用，不需 caller 自行傳入：
+
+| 欄位 | 型別 | 說明 | 來源 |
+|------|------|------|------|
+| `__user` | `string \| null` | 對應 request 的 `user` 欄位；未傳時為 `null` | request `user` |
+
+**注意**：
+- `__` 前綴為系統保留命名空間，caller 傳入的同名欄位會被**強制覆蓋**
+- 現有 credential 欄位不受影響，僅新增 `__user` 鍵
+
 ### input
 
 - **型別**: `string | Message[]`
