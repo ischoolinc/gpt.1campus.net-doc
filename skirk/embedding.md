@@ -11,7 +11,7 @@
 | Auth Mode | 入口 URL |
 |-----------|---------|
 | `anonymous` | `https://gpt.1campus.net/skirk/?assistant={code}` |
-| `identity_code` | `/api/skirk/auth/login?assistant={code}&dsns={dsns}&code={identity_code}` |
+| `identity_code` | `/api/skirk/auth/login?assistant={code}&dsns={dsns}&code={identity_code}` ※[註1] |
 | `passthrough` | `/api/skirk/auth/passthrough?assistant={code}&{params}` |
 | `code_exchange` | `/api/skirk/auth/code-exchange?assistant={code}&code={one_time_code}` |
 
@@ -20,6 +20,8 @@
 ```
 /skirk/a/{assistant_code}?sid={session_id}
 ```
+
+> **[註1] identity_code / identity_code_elevated 模式**：若 App 設定了 `requiredTeacherTags`，老師標籤不符會 redirect 到 `/skirk/?error=您沒有此助理的存取授權`，不會進到聊天頁。詳見 [auth-modes.md 教師標籤校驗](./auth-modes.md#教師標籤校驗requiredteachertags)。
 
 ---
 

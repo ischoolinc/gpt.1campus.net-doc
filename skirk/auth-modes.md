@@ -80,7 +80,7 @@ https://gpt.1campus.net/skirk/?assistant={assistant_code}
 | V4 欄位 | 值 |
 |---------|-----|
 | `user` | 1Campus 帳號（如 `teacher@school.edu.tw`） |
-| `context` | identityInfo 展開 + `dsns` + `role` |
+| `context` | identityInfo 展開 + `dsns` + `role` + `schoolCode` + `schoolType` |
 | `credential` | —（無） |
 
 **context 結構範例**：
@@ -91,11 +91,18 @@ https://gpt.1campus.net/skirk/?assistant={assistant_code}
   "schoolName": "測試國中",
   "teacher": { "teacherName": "王老師" },
   "dsns": "sh.jh.edu.tw",
-  "role": "teacher"
+  "role": "teacher",
+  "schoolCode": "014328",
+  "schoolType": "國中"
 }
 ```
 
-這些值可以在 Preset 的 instructions 中用模板語法引用：`<%= ctx.schoolName %>`、`<%= ctx.role %>`。
+| 欄位 | 說明 |
+|------|------|
+| `schoolCode` | 教育部學校代碼（國小校務系統 Cloud School 識別用） |
+| `schoolType` | 學校類型 enum：`'國小'` / `'國中'` / `'高中'`（Jasmine API 定義） |
+
+這些值可以在 Preset 的 instructions 中用模板語法引用：`<%= ctx.schoolName %>`、`<%= ctx.role %>`、`<%= ctx.schoolType %>`。
 
 ---
 
@@ -254,3 +261,42 @@ curl -X POST 'https://1campus.net/q/create' -H 'Content-Type: application/json' 
 ```
 
 Token 由 Skirk 後端自動 refresh，前端無感知。
+
+---
+
+## 教師標籤校驗（requiredTeacherTags）
+
+`identity_code` 與 `identity_code_elevated` 兩種模式可在 App 設定中加上**教師標籤校驗**閘，限制只有持有特定標籤的教師才能進入助理。常用於高敏感度的助理（例如校長 AI、決策助理）。
+
+### 設定方式
+
+在管理介面的「認證設定 → 需要的教師標籤」欄位加入需要的 tag（按 Enter 加入），或直接寫入 `app.config`：
+
+```json
+{
+  "requiredTeacherTags": ["AI平台.AI決策助理"]
+}
+```
+
+### 校驗邏輯
+
+- **OR 邏輯**：使用者只要持有任一標籤即通過
+- **空陣列 / 未設定**：不檢查，所有登入者皆可進入
+- **僅 identity_code 系列模式生效**：anonymous / passthrough / code_exchange 設定無效
+- **校驗時機**：
+  - `identity_code`：取得 userInfo 後立即校驗
+  - `identity_code_elevated`：在 signInReg 升權**之前**先校驗（提早擋下，避免無謂升權）
+
+### 失敗處理
+
+校驗失敗（含 API 異常、token 取不到、教師資料查無、tag 不符）會統一 redirect 到：
+
+```
+/skirk/?error=您沒有此助理的存取授權
+```
+
+訊息為 generic，不外洩具體失敗原因。
+
+### 標籤資料來源
+
+由 1Campus 校務系統的教師標籤管理機制維護。Skirk 在登入流程中呼叫 Jasmine API（`getTeacherTag`）取得使用者目前的標籤清單後做 OR 比對。
