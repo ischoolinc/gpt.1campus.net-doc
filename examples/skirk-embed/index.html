@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Skirk Code Exchange — 嵌入範例</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+    margin: 0; padding: 0;
+    background: #f5f5f7; color: #1d1d1f;
+    display: flex; flex-direction: column;
+    height: 100vh;
+  }
+  header {
+    background: #fff; padding: 16px 24px;
+    border-bottom: 1px solid #e5e5ea;
+  }
+  header h1 { font-size: 18px; margin: 0 0 8px; }
+  header p { font-size: 12px; color: #86868b; margin: 0; }
+  .container {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    overflow: hidden;
+  }
+  .sidebar {
+    background: #fff;
+    border-right: 1px solid #e5e5ea;
+    padding: 16px;
+    overflow-y: auto;
+  }
+  .sidebar h2 {
+    font-size: 13px; margin: 0 0 12px;
+    color: #6e6e73; text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .user-btn {
+    display: block; width: 100%;
+    padding: 10px 12px; margin-bottom: 8px;
+    background: #f5f5f7; border: 1px solid transparent;
+    border-radius: 8px; cursor: pointer;
+    text-align: left; font-family: inherit; font-size: 13px;
+  }
+  .user-btn:hover { background: #e8e8ed; }
+  .user-btn.active { background: #007aff; color: #fff; border-color: #007aff; }
+  .user-btn .name { font-weight: 600; }
+  .user-btn .meta { font-size: 11px; opacity: 0.7; margin-top: 2px; }
+  .status {
+    margin-top: 16px; padding: 12px;
+    background: #f5f5f7; border-radius: 8px;
+    font-size: 11px; color: #6e6e73;
+    word-break: break-all; line-height: 1.6;
+  }
+  .status code { background: rgba(0,0,0,0.06); padding: 1px 4px; border-radius: 3px; }
+  .iframe-wrap {
+    background: #f5f5f7;
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  iframe {
+    width: 100%; height: 100%;
+    border: 1px solid #d2d2d7;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+  }
+  .placeholder {
+    color: #86868b; font-size: 14px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎭 Skirk Code Exchange 嵌入範例</h1>
+  <p>模擬第三方系統「以登入身份進入 AI 助理」的安全流程（iframe 嵌入）</p>
+</header>
+
+<div class="container">
+  <aside class="sidebar">
+    <h2>選擇模擬使用者</h2>
+    <button class="user-btn" data-id="student_001">
+      <div class="name">王小明</div>
+      <div class="meta">學生 · 5 年級 · 501 班</div>
+    </button>
+    <button class="user-btn" data-id="student_002">
+      <div class="name">陳美玲</div>
+      <div class="meta">學生 · 6 年級 · 603 班</div>
+    </button>
+    <button class="user-btn" data-id="teacher_001">
+      <div class="name">黃老師</div>
+      <div class="meta">老師 · 數學</div>
+    </button>
+
+    <div class="status" id="status">點選使用者進入 AI 助理</div>
+  </aside>
+
+  <main class="iframe-wrap" id="iframeWrap">
+    <div class="placeholder">← 選擇使用者後，AI 助理會在這裡開啟</div>
+  </main>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const statusEl = $("status");
+const iframeWrap = $("iframeWrap");
+
+document.querySelectorAll(".user-btn").forEach((btn) => {
+  btn.addEventListener("click", async () => {
+    document.querySelectorAll(".user-btn").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    const userId = btn.dataset.id;
+    statusEl.textContent = `正在為 ${userId} 產生 code...`;
+    iframeWrap.innerHTML = '<div class="placeholder">載入中...</div>';
+
+    try {
+      const res = await fetch("/api/enter-skirk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
+
+      const { skirk_url, user } = await res.json();
+
+      statusEl.innerHTML =
+        `✅ 已登入 <code>${user}</code><br>` +
+        `iframe URL: <code>${skirk_url}</code>`;
+
+      // 用 iframe 嵌入 Skirk（已驗證 Skirk 沒設 X-Frame-Options，可嵌入）
+      iframeWrap.innerHTML = `<iframe src="${skirk_url}" allow="microphone; camera"></iframe>`;
+    } catch (err) {
+      statusEl.innerHTML = `❌ 錯誤：${err.message}`;
+      iframeWrap.innerHTML = `<div class="placeholder">載入失敗</div>`;
+    }
+  });
+});
+</script>
+
+</body>
+</html>

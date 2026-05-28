@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>1Campus GPT V4 API — 二階段範例</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+    margin: 0; padding: 0;
+    background: #f5f5f7; color: #1d1d1f;
+    display: flex; flex-direction: column;
+    height: 100vh;
+  }
+  header {
+    background: #fff; padding: 16px 24px;
+    border-bottom: 1px solid #e5e5ea;
+    display: flex; align-items: center; gap: 16px;
+  }
+  header h1 { font-size: 18px; margin: 0; flex: 1; }
+  header button {
+    padding: 6px 14px; border: none; border-radius: 6px;
+    background: #f5f5f7; color: #1d1d1f;
+    cursor: pointer; font-size: 12px;
+  }
+  header button:hover { background: #e8e8ed; }
+  #messages {
+    flex: 1; overflow-y: auto;
+    padding: 24px; display: flex; flex-direction: column; gap: 16px;
+  }
+  .msg { max-width: 75%; padding: 12px 16px; border-radius: 16px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; }
+  .msg.user { align-self: flex-end; background: #007aff; color: #fff; }
+  .msg.assistant { align-self: flex-start; background: #fff; border: 1px solid #e5e5ea; }
+  .msg.system { align-self: center; color: #86868b; font-size: 12px; padding: 4px 12px; background: transparent; }
+  .msg.error { align-self: center; color: #d70015; font-size: 12px; padding: 8px 12px; background: #ffe5e5; border-radius: 8px; }
+  .composer {
+    background: #fff; padding: 12px 24px;
+    border-top: 1px solid #e5e5ea;
+    display: flex; gap: 12px;
+  }
+  .composer textarea {
+    flex: 1; padding: 10px 14px;
+    border: 1px solid #d2d2d7; border-radius: 12px;
+    font-family: inherit; font-size: 14px;
+    resize: none; height: 44px; max-height: 120px;
+  }
+  .composer button {
+    padding: 0 20px; border: none; border-radius: 12px;
+    background: #007aff; color: #fff;
+    cursor: pointer; font-size: 14px; font-weight: 600;
+  }
+  .composer button:disabled { background: #c7c7cc; cursor: not-allowed; }
+  .composer button:hover:not(:disabled) { background: #0051d5; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🤖 1Campus GPT V4 — 二階段 API 範例</h1>
+  <div style="display:flex;flex-direction:column;gap:2px;">
+    <input id="accessToken" type="text" placeholder="Access Token（function call 用）"
+           title="實務上應由後端依登入使用者注入 credential，此處放在前端僅為範例方便"
+           style="padding:6px 10px;border:1px solid #d2d2d7;border-radius:6px;font-size:12px;width:380px;font-family:ui-monospace,Menlo,monospace;" />
+    <span style="font-size:11px;color:#86868b;">
+      Demo Token: <code style="background:#f5f5f7;padding:1px 4px;border-radius:3px;cursor:pointer;" id="demoToken">sk-score-7f3a9c2e1b7d40568faec3119d2b6e84</code>
+      <span style="margin-left:6px;">（點擊套用，後端為假資料）｜⚠️ 實務應由後端注入</span>
+    </span>
+  </div>
+  <button id="newThread">新對話</button>
+</header>
+
+<div id="messages">
+  <div class="msg system">輸入訊息開始對話。對話會延續同一個 thread_id。</div>
+</div>
+
+<form class="composer" id="composer">
+  <textarea id="input" placeholder="輸入訊息，Enter 送出（Shift+Enter 換行）" required></textarea>
+  <button type="submit" id="sendBtn">送出</button>
+</form>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const messagesEl = $("messages");
+const inputEl = $("input");
+const sendBtn = $("sendBtn");
+
+let threadId = null;
+
+// Access Token 記到 localStorage
+const tokenEl = $("accessToken");
+tokenEl.value = localStorage.getItem("v4_access_token") || "";
+tokenEl.addEventListener("change", () => {
+  localStorage.setItem("v4_access_token", tokenEl.value);
+});
+
+// 點 demo token 就套用到 input
+$("demoToken").addEventListener("click", () => {
+  tokenEl.value = $("demoToken").textContent;
+  localStorage.setItem("v4_access_token", tokenEl.value);
+});
+
+$("newThread").onclick = () => {
+  threadId = null;
+  messagesEl.innerHTML = "";
+  addMessage("system", "已開新對話（thread_id 清空）");
+};
+
+function addMessage(role, text) {
+  const div = document.createElement("div");
+  div.className = `msg ${role}`;
+  div.textContent = text;
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+  return div;
+}
+
+inputEl.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    $("composer").requestSubmit();
+  }
+});
+
+$("composer").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const userInput = inputEl.value.trim();
+  if (!userInput) return;
+
+  addMessage("user", userInput);
+  inputEl.value = "";
+  sendBtn.disabled = true;
+
+  const assistantEl = addMessage("assistant", "…");
+
+  try {
+    // 步驟 1：跟自家後端要 run_token
+    // credential 給 function call 用：query_scores 的 credentialRouting
+    // 會把 accessToken 放到 HTTP header X-Access-Token
+    const accessToken = tokenEl.value.trim();
+    const credential = accessToken ? { accessToken } : undefined;
+
+    const prepRes = await fetch("/api/prepare", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ input: userInput, thread_id: threadId, credential }),
+    });
+    if (!prepRes.ok) {
+      const err = await prepRes.json().catch(() => ({}));
+      throw new Error(err.error || `prepare 失敗 HTTP ${prepRes.status}`);
+    }
+    const { sse_url, thread_id: tid } = await prepRes.json();
+    if (tid) threadId = tid;
+
+    // 步驟 2：用 EventSource 連 V4 串流（這個 endpoint 有開 CORS）
+    await streamFromV4(sse_url, assistantEl);
+  } catch (err) {
+    assistantEl.remove();
+    addMessage("error", `錯誤：${err.message}`);
+  } finally {
+    sendBtn.disabled = false;
+    inputEl.focus();
+  }
+});
+
+function streamFromV4(sseUrl, assistantEl) {
+  return new Promise((resolve, reject) => {
+    const es = new EventSource(sseUrl);
+    let accumulated = "";
+
+    es.addEventListener("text.chunk", (e) => {
+      const data = JSON.parse(e.data);
+      if (data.content) {
+        accumulated += data.content;
+        assistantEl.textContent = accumulated;
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      }
+    });
+
+    es.addEventListener("text.completed", (e) => {
+      const data = JSON.parse(e.data);
+      if (data.content) {
+        accumulated = data.content;
+        assistantEl.textContent = accumulated;
+      }
+    });
+
+    es.addEventListener("conversation.completed", () => {
+      if (!accumulated) assistantEl.textContent = "(無回應)";
+      es.close();
+      resolve();
+    });
+
+    es.addEventListener("conversation.error", (e) => {
+      const data = JSON.parse(e.data);
+      es.close();
+      reject(new Error(data.message || "對話錯誤"));
+    });
+
+    es.onerror = (err) => {
+      es.close();
+      // EventSource 在 server 主動關閉時也會觸發 onerror，所以已經有內容就當完成
+      if (accumulated) resolve();
+      else reject(new Error("SSE 連線錯誤"));
+    };
+  });
+}
+</script>
+
+</body>
+</html>

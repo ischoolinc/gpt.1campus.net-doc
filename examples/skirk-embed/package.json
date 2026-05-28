@@ -1,0 +1,12 @@
+{
+  "name": "skirk-embed-example",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Skirk Code Exchange iframe 嵌入範例",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}

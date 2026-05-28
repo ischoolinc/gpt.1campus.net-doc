@@ -1,0 +1,12 @@
+{
+  "name": "v4-api-example",
+  "version": "1.0.0",
+  "private": true,
+  "description": "1Campus GPT V4 API 二階段呼叫範例",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}
