@@ -30,7 +30,7 @@ token 全程在 server ↔ server 之間，不會出現在 URL / referer / log�
 ## 啟動
 
 ```bash
-pnpm install
+npm install
 node server.js
 ```
 

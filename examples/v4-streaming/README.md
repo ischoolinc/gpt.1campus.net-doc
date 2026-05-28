@@ -16,7 +16,7 @@
 ## 啟動
 
 ```bash
-pnpm install
+npm install
 V4_API_KEY=prj_xxx.key_yyy node server.js
 ```
 

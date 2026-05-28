@@ -8,7 +8,7 @@
 // 啟動：
 //   V4_API_KEY=prj_xxx.key_yyy node server.js
 //
-// 依賴：express（pnpm install express）
+// 依賴：express（npm install）
 
 const express = require("express");
 
