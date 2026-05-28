@@ -48,7 +48,7 @@
 
 - **型別**: `Record<string, any>`
 - **必填**: 否
-- **說明**: 認證資訊，用於 Function Call 權限驗證
+- **說明**: 認證資訊，由 V4 依 Function 端的 `credentialRouting` 設定自動注入到 HTTP 請求（header / query / body / params）。**Function 端設定與完整範例見 [credential-routing.md](./credential-routing.md)**。
 
 #### 系統自動注入欄位
 
