@@ -163,7 +163,14 @@ X-Request-ID: req_abc123xyz
     }
   ],
   "msg_id": 790,
-  "thread_id": 456
+  "thread_id": 456,
+  "token_usage": {
+    "input_tokens": 120,
+    "output_tokens": 85,
+    "total_tokens": 205,
+    "cache": { "read_tokens": 100, "write_tokens": 0 },
+    "reasoning_tokens": 40
+  }
 }
 ```
 
@@ -174,6 +181,7 @@ X-Request-ID: req_abc123xyz
 | `outputs` | Output[] | 輸出陣列（通常包含一個 `output_text`） |
 | `msg_id` | number | AI 回應訊息的資料庫 ID |
 | `thread_id` | number | Thread ID（多輪對話使用） |
+| `token_usage` | TokenUsage | Token 使用統計（多輪迭代加總），結構同 `conversation.completed` 事件 |
 
 #### Output 物件結構
 
@@ -182,10 +190,37 @@ X-Request-ID: req_abc123xyz
 | `type` | string | 輸出類型：`output_text` |
 | `text` | string | AI 完整回應內容 |
 
-**未來可能的 Output 類型**：
-- `output_text` - 文字輸出（目前支援）
-- `tool_call` - Tool 呼叫（規劃中）
-- `reasoning` - 推理內容（規劃中）
+#### TokenUsage 物件結構
+
+| 欄位 | 型別 | 說明 |
+|------|------|------|
+| `input_tokens` | number | 全部 input tokens（含 cache 讀取、cache 寫入、未 cache） |
+| `output_tokens` | number | 輸出 tokens（含 reasoning） |
+| `total_tokens` | number | `input_tokens` + `output_tokens` |
+| `cache` | object? | Cache 細項，未使用 cache 時不出現 |
+| `cache.read_tokens` | number | 從 cache 讀取的 tokens |
+| `cache.write_tokens` | number | 寫入 cache 的 tokens（僅 Anthropic 有此概念） |
+| `reasoning_tokens` | number? | 推理 tokens（Gemini thinking、OpenAI o 系列），無推理時不出現 |
+
+> ⚠️ `cache` 是 `input_tokens` 的細項，`reasoning_tokens` 是 `output_tokens` 的細項，計費時不要重複加總。
+
+#### 暫停回應（Client-side Function Call）
+
+當 AI 呼叫需由 client 執行的工具時，回應改為暫停格式（200 OK），不含 `outputs`：
+
+```json
+{
+  "status": "paused",
+  "reason": "client_tool_execution",
+  "pending_tools": [
+    { "call_id": "call_abc", "name": "get_location", "arguments": "{}" }
+  ]
+}
+```
+
+Client 執行完工具後，帶 `thread_id` + `tool_outputs` 再次呼叫 API 繼續對話，詳見 [client-function-call.md](./client-function-call.md)。
+
+> 暫停回應不含 `token_usage`（與串流模式的 `conversation.paused` 一致）。
 
 ---
 
@@ -235,7 +270,7 @@ event: iteration.completed
 data: {"type":"iteration.completed","iteration":1,"has_next_iteration":false,"timestamp":"2025-11-03T10:00:05Z"}
 
 event: conversation.completed
-data: {"type":"conversation.completed","conversation_id":"conv_abc123","status":"success","token_usage":{"input_tokens":120,"output_tokens":85,"total_tokens":205},"timestamp":"2025-11-03T10:00:05Z"}
+data: {"type":"conversation.completed","conversation_id":"conv_abc123","status":"success","token_usage":{"input_tokens":120,"output_tokens":85,"total_tokens":205,"cache":{"read_tokens":100,"write_tokens":0},"reasoning_tokens":40},"timestamp":"2025-11-03T10:00:05Z"}
 ```
 
 ### SSE 事件格式
@@ -254,7 +289,7 @@ data: <JSON 資料>
 - `text.chunk` 使用 `content` 欄位（而非 `text`）
 - `text.completed` 包含完整的 `content`（所有 chunk 的組合）
 - **不包含 `item_id`**（這是系統內部資訊，前端不需要處理）
-- `conversation.completed` 包含 `token_usage` 統計資訊
+- `conversation.completed` 包含 `token_usage` 統計資訊（欄位見 [TokenUsage 物件結構](#tokenusage-物件結構)）
 - 前端使用 `EventSource` API 接收
 
 ---
